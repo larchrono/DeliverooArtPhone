@@ -9,8 +9,9 @@ using System.Net.Sockets;
 
 public class DvTCPClient : MonoBehaviour {
 	public static DvTCPClient instance;
+    public static Action OnTouchStart;
     public static Action OnRecieveGameFinished;
-
+    
     public Button BTNGO;
 	public InputField InputHost;
     public InputField InputPort;
@@ -20,6 +21,7 @@ public class DvTCPClient : MonoBehaviour {
 
 
 	Boolean socket_ready = false;
+    public bool GetSocketInfo { get {return socket_ready;}}
 	TcpClient tcp_socket;
 	NetworkStream net_stream;
 	StreamWriter socket_writer;
@@ -33,6 +35,9 @@ public class DvTCPClient : MonoBehaviour {
 	void Start(){
         InputHost.text = PlayerPrefs.GetString("HostIP", "");
         InputPort.text = PlayerPrefs.GetString("HostPort", "");
+        BTNGO.onClick.AddListener(StartTCP);
+        InputHost.onValueChanged.AddListener(SaveHostIP);
+        InputPort.onValueChanged.AddListener(SaveHostPort);
 		CatchInputField();
 	}
 
@@ -54,14 +59,20 @@ public class DvTCPClient : MonoBehaviour {
 	{
         CatchInputField();
         BTNGO.interactable = false;
-		SetupSocket (hostIP, hostPort);
 
+        if(socket_ready){
+            OnTouchStart?.Invoke();
+            return;
+        }
+
+		SetupSocket (hostIP, hostPort);
         if(!socket_ready)
             return;
 
         Debug.Log ("Connect to Server at port :" + hostPort);
         clientSock = new Thread (ReadSocket);
         clientSock.Start ();
+        OnTouchStart?.Invoke();
 	}
 
 
@@ -156,7 +167,8 @@ public class DvTCPClient : MonoBehaviour {
 		socket_reader.Close();
 		tcp_socket.Close();
 		socket_ready = false;
-        BTNGO.interactable = true;
+
+        OnRecieveGameFinished?.Invoke();
 	}
 
     void OnApplicationQuit()
