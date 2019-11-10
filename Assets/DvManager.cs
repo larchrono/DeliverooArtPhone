@@ -25,6 +25,7 @@ public class DvManager : MonoBehaviour
         mainPlayer = GetComponent<VideoPlayer>();
         DvTCPClient.OnTouchStart += OnGameStart;
         DvTCPClient.OnRecieveGameFinished += OnGameFinished;
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
     }
 
     void Update(){
